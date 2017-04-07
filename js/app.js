@@ -11,9 +11,22 @@ var Enemy = function(x, y, color) {
     this.x = x;
     this.y = y;
 
-    speedOffset = 2 + parseFloat((Math.random() * 5).toFixed(2));
-    console.log(speedOffset);
-    this.speed = 100 * speedOffset;
+    var speedOffset = 2 + (Math.random().toFixed(2) * 5);
+    this.speed = 100 * (1 + speedOffset);
+};
+
+Enemy.prototype.reset = function() {
+    // Essa função dá uma nova velocidade e cor para um Enemy ao mesmo tempo
+    // que reinicia sua posição X.
+    var speedOffset = 2 + (Math.random().toFixed(2) * 5);
+    this.speed = 100 * (1 + speedOffset);
+
+    var enemyColors = ['red', 'green', 'yellow', 'blue'],
+        color = enemyColors[Math.floor(Math.random() * enemyColors.length)];
+
+    this.sprite = 'images/enemy-bug-'+ color +'.png';
+
+    this.x = -101;
 };
 
 // Update the enemy's position, required method for game
@@ -24,7 +37,7 @@ Enemy.prototype.update = function(dt) {
     // all computers.
     var offset = (this.speed * dt);
     if(this.x > 606) {
-        this.x = -101;
+        this.reset();
     } else {
         this.x += offset;
     }
