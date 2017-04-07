@@ -14,6 +14,9 @@
  * a little simpler to work with.
  */
 
+var gameOver = false;
+var gameWin = false;
+
 var Engine = (function(global) {
     /* Predefine the variables we'll be using within this scope,
      * create the canvas element, grab the 2D context for that canvas
@@ -45,8 +48,11 @@ var Engine = (function(global) {
         /* Call our update/render functions, pass along the time delta to
          * our update function since it may be used for smooth animation.
          */
-        update(dt);
-        render();
+        if(!gameOver && !gameWin) {
+            update(dt);
+            render();
+        }
+
 
         /* Set our lastTime variable which is used to determine the time delta
          * for the next time this function is called.
@@ -64,9 +70,31 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
-        reset();
-        lastTime = Date.now();
-        main();
+        /* Desenha uma tela simples para iniciar o jogo */
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, 505, 606);
+
+        ctx.fillStyle = 'white';
+        ctx.font = '60px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText("Frogger Game", 252.5, 300);
+
+        ctx.font = '24px Arial';
+        ctx.fillText("Press Enter to start", 252.5, 345);
+
+        /* Adiciona um listener para tecla Enter */
+        document.addEventListener("keyup", function(e) {
+            if(e.keyCode == 13) {
+                ctx.clearRect(0, 0, 505, 606);
+                reset();
+                lastTime = Date.now();
+                main();
+            }
+        });
+
+        //reset();
+        //lastTime = Date.now();
+        //main();
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -80,7 +108,7 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-        // checkCollisions();
+        checkCollisions();
     }
 
     /* This is called by the update function and loops through all of the
@@ -97,6 +125,18 @@ var Engine = (function(global) {
         player.update();
     }
 
+    /* Essa função é chamada pela função update para checar as colisões entre
+    o jogador e alguma coisa. No caso do jogo Frogger, a colisão existe entre
+    o jogador e inimigos. Quando isso ocorre, o jogador volta ao ponto inicial
+    e perde uma vida. */
+    function checkCollisions() {
+        // Percorre o array com todos os inimigos instanciados e então compara
+        // a posição deles com a do jogador para checar uma possível colisão
+        allEnemies.forEach(function(enemy) {
+            player.checkCollision(enemy);
+        });
+    }
+
     /* This function initially draws the "game level", it will then call
      * the renderEntities function. Remember, this function is called every
      * game tick (or loop of the game engine) because that's how games work -
@@ -104,39 +144,41 @@ var Engine = (function(global) {
      * they are just drawing the entire screen over and over.
      */
     function render() {
-        /* This array holds the relative URL to the image used
-         * for that particular row of the game level.
-         */
-        var rowImages = [
-                'images/water-block.png',   // Top row is water
-                'images/stone-block.png',   // Row 1 of 3 of stone
-                'images/stone-block.png',   // Row 2 of 3 of stone
-                'images/stone-block.png',   // Row 3 of 3 of stone
-                'images/stone-block.png',   // Row 1 of 2 of grass
-                'images/grass-block.png'    // Row 2 of 2 of grass
-            ],
-            numRows = 6,
-            numCols = 5,
-            row, col;
+        if(!gameOver && !gameWin) {
+            /* This array holds the relative URL to the image used
+             * for that particular row of the game level.
+             */
+            var rowImages = [
+                    'images/water-block.png',   // Top row is water
+                    'images/stone-block.png',   // Row 1 of 3 of stone
+                    'images/stone-block.png',   // Row 2 of 3 of stone
+                    'images/stone-block.png',   // Row 3 of 3 of stone
+                    'images/stone-block.png',   // Row 1 of 2 of grass
+                    'images/grass-block.png'    // Row 2 of 2 of grass
+                ],
+                numRows = 6,
+                numCols = 5,
+                row, col;
 
-        /* Loop through the number of rows and columns we've defined above
-         * and, using the rowImages array, draw the correct image for that
-         * portion of the "grid"
-         */
-        for (row = 0; row < numRows; row++) {
-            for (col = 0; col < numCols; col++) {
-                /* The drawImage function of the canvas' context element
-                 * requires 3 parameters: the image to draw, the x coordinate
-                 * to start drawing and the y coordinate to start drawing.
-                 * We're using our Resources helpers to refer to our images
-                 * so that we get the benefits of caching these images, since
-                 * we're using them over and over.
-                 */
-                ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
+            /* Loop through the number of rows and columns we've defined above
+             * and, using the rowImages array, draw the correct image for that
+             * portion of the "grid"
+             */
+            for (row = 0; row < numRows; row++) {
+                for (col = 0; col < numCols; col++) {
+                    /* The drawImage function of the canvas' context element
+                     * requires 3 parameters: the image to draw, the x coordinate
+                     * to start drawing and the y coordinate to start drawing.
+                     * We're using our Resources helpers to refer to our images
+                     * so that we get the benefits of caching these images, since
+                     * we're using them over and over.
+                     */
+                    ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
+                }
             }
-        }
 
-        renderEntities();
+            renderEntities();
+        }
     }
 
     /* This function is called by the render function and is called on each game
@@ -175,6 +217,7 @@ var Engine = (function(global) {
         'images/enemy-bug-blue.png',
         'images/enemy-bug-green.png',
         'images/enemy-bug-yellow.png',
+        'images/Heart.png',
         'images/char-boy.png'
     ]);
     Resources.onReady(init);
